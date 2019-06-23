@@ -199,7 +199,7 @@ export default {
 <style lang="less" scoped>
 .login-wrap {
   height: 100%;
-  background-color: skyblue;
+  background-color: rgb(0, 183, 255);
   display: flex;
   justify-content: center;
   align-items: center;
