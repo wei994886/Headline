@@ -13,10 +13,10 @@
           给 el-form 添加 ref
           调用 this.$refs['ref名字'].validate(valid => {}) 触发验证
        -->
-      <el-form
-        class="form-content"
-        ref="form"
-        :model="form"
+        <el-form
+          class="form-content"
+          ref="form"
+          :model="form"
         :rules="rules">
         <el-form-item prop="mobile">
           <el-input v-model="form.mobile" placeholder="手机号"></el-input>
@@ -199,7 +199,7 @@ export default {
 <style lang="less" scoped>
 .login-wrap {
   height: 100%;
-  background-color: #2b3e4a;
+  background-color: skyblue;
   display: flex;
   justify-content: center;
   align-items: center;
