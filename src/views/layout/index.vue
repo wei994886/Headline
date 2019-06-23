@@ -48,7 +48,9 @@ export default {
 }
 
 .el-header {
-  background-color: #aec0d1;
+  background-color: rgb(248, 193, 186);
+  font-size: 20px;
+  line-height: 60px;
 }
 
 .el-main {
