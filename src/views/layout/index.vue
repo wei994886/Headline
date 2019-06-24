@@ -1,8 +1,4 @@
 <template>
-  <!-- <div class="layout-wrap">
-    <AppAside/>
-    <AppHeader/>
-  </div> -->
   <el-container>
     <el-aside width="200px">
       <!-- 侧边栏 -->
@@ -48,9 +44,7 @@ export default {
 }
 
 .el-header {
-  background-color: rgb(248, 193, 186);
-  font-size: 20px;
-  line-height: 60px;
+  // background-color: #aec0d1;
 }
 
 .el-main {
