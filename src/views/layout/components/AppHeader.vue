@@ -39,8 +39,8 @@ export default {
   },
   methods: {
     handleLogout () {
-      this.$confirm('是否确认退出？', '退出提示', {
-        confirmButtonText: '确认',
+      this.$confirm('确认退出吗？', '退出提示', {
+        confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
@@ -58,7 +58,7 @@ export default {
       }).catch(() => {
         this.$message({
           type: 'info',
-          message: '退出已取消'
+          message: '已取消退出'
         })
       })
     },
