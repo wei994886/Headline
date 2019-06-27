@@ -6,16 +6,46 @@
         <span>数据筛选</span>
         <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
       </div>
-      <div v-for="o in 4" :key="o" class="text item">
-        {{'列表内容 ' + o }}
-      </div>
+      <el-form ref="form" :model="filterParams" label-width="80px">
+        <el-form-item label="状态">
+          <el-radio-group v-model="filterParams.status">
+            <el-radio label="">全部</el-radio>
+            <el-radio
+              v-for="(item, index) in statTypes"
+              :key="item.label"
+              :label="index"
+            >{{ item.label }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="频道">
+          <article-channel v-model="filterParams.channel_id"></article-channel>
+        </el-form-item>
+        <el-form-item label="时间">
+          <el-date-picker
+            value-format="yyyy-MM-dd"
+            v-model="range_date"
+            @change="handleDateChange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            type="primary"
+            @click="handleFilter"
+            :loading="articleLoading"
+          >查询</el-button>
+        </el-form-item>
+      </el-form>
     </el-card>
     <!-- 数据筛选 -->
 
     <!-- 文章列表 -->
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <span>一共有xxx条数据</span>
+        <span>一共有<strong>{{ totalCount }}</strong>条数据</span>
         <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
       </div>
       <!--
@@ -70,9 +100,9 @@
         </el-table-column>
         <el-table-column
           label="操作">
-          <template>
+          <template slot-scope="scope">
             <el-button size="mini" type="primary" plain>修改</el-button>
-            <el-button size="mini" type="danger" plain>删除</el-button>
+            <el-button size="mini" type="danger" plain @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -82,9 +112,11 @@
         page-size 配置每页大小，默认是 10
         total 用来配置总记录数
         分页组件会根据每页大小和总记录数进行分页
+        current-page 当前高亮的页码，需要和数据保持同步，否则可能会出现数据页码改变，视图页码没变的情况
       -->
       <el-pagination
         background
+        :current-page="page"
         layout="prev, pager, next"
         :page-size="pageSize"
         :total="totalCount"
@@ -98,8 +130,13 @@
 </template>
 
 <script>
+import ArticleChannel from '@/components/article-channel'
+
 export default {
   name: 'ArticleList',
+  components: {
+    ArticleChannel
+  },
   data () {
     return {
       articles: [],
@@ -128,7 +165,14 @@ export default {
       pageSize: 10, // 每页大小
       totalCount: 0, // 总数据量
       page: 1, // 当前页码
-      articleLoading: false // 加载中
+      articleLoading: false, // 加载中
+      filterParams: {
+        status: '', // 文章状态
+        channel_id: '', // 频道id
+        begin_pubdate: '', // 开始时间
+        end_pubdate: '' // 结束时间
+      },
+      range_date: '' // 时间范围绑定值，这个字段的意义是为了绑定 date 组件触发 change 事件
     }
   },
 
@@ -137,25 +181,101 @@ export default {
   },
 
   methods: {
-    async loadArticles () {
-      // 请求开始，加载 loading
-      this.articleLoading = true
-      // 除了登录相关接口之后，其它接口都必须在请求头中通过 Authorization 字段提供用户 token
-      // 当我们登录成功，服务端会生成一个 token 令牌，放到用户信息中
-      const data = await this.$http({
-        method: 'GET',
-        url: '/articles',
-        params: {
-          page: this.page, // 页码
-          per_page: this.pageSize// 每页大小
+    async handleDelete (item) {
+      try {
+        // 删除确认提示
+        await this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        // 如果手动 catch 了它的异常，还是会被外部的 try-catch 捕获到
+        // 但是代码依然可以继续往后执行
+        // .catch(() => {
+        //   this.$message({
+        //     type: 'info',
+        //     message: '已取消删除'
+        //   })
+        // })
+
+        // 确认：执行删除操作
+        await this.$http({
+          method: 'DELETE',
+          url: `/articles/${item.id}`
+        })
+
+        this.$message({
+          type: 'success',
+          message: '删除成功'
+        })
+
+        // 删除成功重新加载数据列表
+        this.loadArticles()
+      } catch (err) {
+        if (err === 'cancel') {
+          return this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
         }
-      })
+        this.$message.error('删除失败')
+      }
+    },
 
-      this.articles = data.results
-      this.totalCount = data.total_count
+    handleDateChange (value) {
+      this.filterParams.begin_pubdate = value[0]
+      this.filterParams.end_pubdate = value[1]
+    },
 
-      // 请求结束，停止 loading
-      this.articleLoading = false
+    handleFilter () {
+      // 点击查询按钮，根据表单中的数据查询文章列表
+      this.page = 1 // 查询从第1页开始加载数据
+      this.loadArticles()
+    },
+
+    async loadArticles () {
+      try {
+        // 请求开始，加载 loading
+        this.articleLoading = true
+        // 除了登录相关接口之后，其它接口都必须在请求头中通过 Authorization 字段提供用户 token
+        // 当我们登录成功，服务端会生成一个 token 令牌，放到用户信息中
+
+        // 去除无用数据字段
+        const filterData = {}
+        for (let key in this.filterParams) {
+          const item = this.filterParams[key]
+          if (item !== null && item !== undefined && item !== '') {
+            filterData[key] = item
+          }
+
+          // 数据中的 0 参与布尔值运算是 false。不会进来
+          // if (item) {
+          //   filterData[key] = item
+          // }
+        }
+
+        const data = await this.$http({
+          method: 'GET',
+          url: '/articles',
+          params: {
+            page: this.page, // 页码
+            per_page: this.pageSize, // 每页大小
+            ...filterData
+          }
+          // params: Object.assgin({
+          //   page: this.page, // 页码
+          //   per_page: this.pageSize, // 每页大小
+          // }, filterData)
+        })
+
+        this.articles = data.results
+        this.totalCount = data.total_count
+
+        // 请求结束，停止 loading
+        this.articleLoading = false
+      } catch (err) {
+        this.$message.error('加载文章列表失败', err)
+      }
     },
 
     handleCurrentChange (page) {
