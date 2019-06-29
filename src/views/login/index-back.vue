@@ -50,6 +50,7 @@
 import axios from 'axios'
 import '@/vendor/gt' // 引入极验 JavaScript SDK 文件，通过 window.initGeetest 使用
 import { saveUser } from '@/utils/auth' // 按需加载，加载模块中非 export default 成员
+import func from '../../../vue-temp/vue-editor-bridge';
 const initCodeTimeSeconds = 60
 
 export default {
