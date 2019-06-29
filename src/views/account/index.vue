@@ -66,7 +66,7 @@ export default {
       loading: false
     }
   },
-  
+
   created () {
     this.loadUser()
   },
@@ -89,7 +89,7 @@ export default {
 
     async handleSave () {
       try {
-        const {name, intro, email } = this.user
+        const { name, intro, email } = this.user
         const data = await this.$http({
           method: 'PATCH',
           url: '/user/profile',

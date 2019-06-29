@@ -24,7 +24,7 @@
 
 <script>
 export default {
-  name : 'ArticleComment',
+  name: 'ArticleComment',
   data () {
     return {
       articles: []
