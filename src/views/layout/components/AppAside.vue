@@ -15,7 +15,7 @@
     default-active="2"
     @open="handleOpen"
     @close="handleClose"
-    background-color="#545c69"
+    background-color="#545c64"
     text-color="#fff"
     active-text-color="#ffd04b"
     :router="true"

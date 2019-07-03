@@ -6,10 +6,10 @@
     <el-row>
       <el-col :span="10">
         <el-form v-loading="loading">
-          <el-form-item label="用户名称">
+          <el-form-item label="媒体名称">
             <el-input v-model="user.name"></el-input>
           </el-form-item>
-          <el-form-item label="用户简介">
+          <el-form-item label="媒体简介">
             <el-input v-model="user.intro"></el-input>
           </el-form-item>
           <el-form-item label="头条号ID">
@@ -103,30 +103,44 @@ export default {
           type: 'success',
           message: '保存修改成功'
         })
+
+        // 提交 mutation，也就是调用 mutation 函数
         this.$store.commit('changeUser', data)
+
+        // 不要直接这样修改，无法通过调试工具查看最新的容器数据状态，也观测不到修改 state 数据的历史记录
+        // this.$store.state.user.name = '哈哈哈'
       } catch (err) {
         console.log(err)
         this.$message.error('保存修改失败')
       }
     },
+
     async handleUpload (uploadConfig) {
       try {
+        // Axios 上传文件
+        // 1. 构建一个 FormData 对象
+        //    将文件添加到 FormData 对象中
         const formData = new FormData()
         formData.append('photo', uploadConfig.file)
+
+        // 2. 发起请求，将 FormData 对象作为 axios 的 data 请求体
         const data = await this.$http({
           method: 'PATCH',
           url: '/user/photo',
           data: formData
         })
+
         this.user.photo = data.photo
+
         this.$store.commit('changeUser', this.user)
+
         this.$message({
           type: 'success',
-          message: '修改用户头像成功'
+          message: '修改媒体头像成功'
         })
       } catch (err) {
         console.log(err)
-        this.$message.error('修改用户头像失败')
+        this.$message.error('修改媒体头像失败')
       }
     }
   }
@@ -143,7 +157,7 @@ export default {
   overflow: hidden;
 }
 .avatar-uploader .el-upload:hover {
-  border-color: red;
+  border-color: #409EFF;
 }
 .avatar-uploader-icon {
   font-size: 28px;
